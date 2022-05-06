@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hello_flutter/shared/menu_drawer.dart';
 import 'package:hello_flutter/data/session_repository.dart';
 import 'package:hello_flutter/data/session.dart';
+import 'package:hello_flutter/shared/session_item.dart';
 
 class SessionScreen extends StatefulWidget {
   const SessionScreen({Key? key}) : super(key: key);
@@ -11,6 +12,8 @@ class SessionScreen extends StatefulWidget {
 }
 
 class _SessionScreenState extends State<SessionScreen> {
+  List<Session> sessions = [];
+
   final TextEditingController txtDescription = TextEditingController();
   final TextEditingController txtDuration = TextEditingController();
 
@@ -18,7 +21,7 @@ class _SessionScreenState extends State<SessionScreen> {
 
   @override
   void initState() {
-    dao.init();
+    dao.init().then((value) => updateScreen());
     super.initState();
   }
 
@@ -29,7 +32,16 @@ class _SessionScreenState extends State<SessionScreen> {
         title: const Text('Your Training Sessions'),
       ),
       drawer: const MenuDrawer(),
-      body: Container(),
+      body: ListView(
+        children: sessions
+            .map((session) => SessionItem(
+                  session: session,
+                  onDismissed: () {
+                    dao.delete(session.id).then((value) => updateScreen());
+                  },
+                ))
+            .toList(),
+      ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
@@ -80,11 +92,18 @@ class _SessionScreenState extends State<SessionScreen> {
     DateTime now = DateTime.now();
     String today = '${now.year}-${now.month}-${now.day}';
     Session newSession = Session(
-        1, today, txtDescription.text, int.tryParse(txtDuration.text) ?? 0);
+        today, txtDescription.text, int.tryParse(txtDuration.text) ?? 0);
     dao.save(newSession);
+
+    updateScreen();
 
     txtDescription.text = '';
     txtDuration.text = '';
     Navigator.pop(context);
+  }
+
+  void updateScreen() {
+    sessions = dao.getList();
+    setState(() {});
   }
 }

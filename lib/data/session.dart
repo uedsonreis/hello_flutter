@@ -4,7 +4,7 @@ class Session {
   String description = '';
   int duration = 0;
 
-  Session(this.id, this.date, this.description, this.duration);
+  Session(this.date, this.description, this.duration);
 
   Session.fromJson(Map<String, dynamic> map) {
     id = map['id'] ?? 0;
